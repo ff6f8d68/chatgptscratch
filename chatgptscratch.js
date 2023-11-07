@@ -1,32 +1,59 @@
-const express = require('express');
-const axios = require('axios');
+class AIBlock {
+    getInfo() {
+        //Metadata for block
+        return {
+            "id": "AI",
+            "name": "AI",
+            "blocks": [{
+                "opcode": "completePrompt",
+                "blockType": "reporter",
+                "text": "complete prompt [string]",
+                "arguments": {
+                    "string": {
+                        "type": "string",
+                        "defaultValue": "Explain quantum computing in simple terms"
+                    }
+                }
+            }],
+            //don't worry about it
+            "menus": {}
+        };
+    }
 
-const app = express();
-app.use(express.json());
+    async completePrompt({ string }) {
+        //Remove trailing spaces, required for model to work properly
+        const text = string.trim();
+        //Request text completion using Davinci3
+        const url = `https://api.openai.com/v1/engines/tex...`;
 
-const OPENAI_API_KEY = 'YOUR_API_KEY';
+        const options = {
+            //Has to be post for some reason
+            method: "POST",
+            //Input prompt and a decent length
+            body: JSON.stringify({
+                prompt: text,
+                max_tokens: 300,
+            }),
+            //API key, and JSON content type
+            headers: {
+                Authorization: "Bearer " + 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,
+                "Content-type": "application/json; charset=UTF-8"
+            },
+        };
 
-app.post('/ask-chatgpt', async (req, res) => {
-  const { question } = req.body;
-  
-  try {
-    const response = await axios.post('https://api.openai.com/v1/engines/davinci-codex/completions', {
-      prompt: question,
-      max_tokens: 50,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${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}`,
-      },
-    });
+        console.log("REQUEST:" + url);
 
-    res.json({ answer: response.data.choices[0].text });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to get a response from ChatGPT' });
-  }
-});
+        //Fetch and await promise.
+        const response = await fetch(url, options);
+        //Get JSON data
+        const jsonData = await response.json();
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+        //The ai response will be the first (and only) choices text
+        const output = jsonData.choices[0].text;
+        return output;
+    }
+
+}
+
+//Register block with Scratch
+Scratch.extensions.register(new AIBlock());
